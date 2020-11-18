@@ -162,10 +162,18 @@ void Game::updateMousePositions()
 
 void Game::updateText()
 {
+	// on nage ici en plein C++ intéressant à retenir.
+	// on forme déja un streamstring (librairie standard)
+	// dans lequel on met ce qu'on veut (text, float etc...)
+	// comme on ferait dans un flux cout
+
 	std::stringstream ss;
 
 	ss << "Points: " << this->points << "\n"
 		<< "Health: " << this->health << "\n";
+
+	// puis on revient dans notre librairie sfml pour faire un setString sur le uiText.
+	// pour récupérer le contenu du string, on utilise str() de la librairie standard (ss.str())
 
 	this->uiText.setString(ss.str());
 }
@@ -199,11 +207,18 @@ void Game::updateEnemies()
 	{
 		bool deleted = false;
 
+		// on deplace les ennemis à chaque iteration vers le bas
 		this->enemies[i].move(0.f, 5.f);
 
+		// si l'ennemi depasse l'écran en bas, on le delete
 		if (this->enemies[i].getPosition().y > this->window->getSize().y)
 		{
+			// si je comprends bien le this->enemies.begin() + i est un iterateur. il parcourt
+			// tout jusquà s'arrêter sur notre element. pourquoi est ce necessaire à bas niveau?
+			// pas encor clair. 
+
 			this->enemies.erase(this->enemies.begin() + i);
+			// on perd un point de vie.
 			this->health -= 1;
 			std::cout << "Health: " << this->health << "\n";
 		}
@@ -212,12 +227,24 @@ void Game::updateEnemies()
 	//Check if clicked upon
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
+		// interdit de maintenir le bouton gauche appuyé.
 		if (this->mouseHeld == false)
 		{
 			this->mouseHeld = true;
 			bool deleted = false;
+
+			// size_t indique que c'est le resultat d'une taille (on pourrait dire que cela remplace int)
+			// et donc faire comme si c'était un int.
+
 			for (size_t i = 0; i < this->enemies.size() && deleted == false; i++)
 			{
+
+				// Un point central de programmation: on regarde déja si le buton est appuyé
+				// si oui, on regarde si la position de la souris est inclus dans les limites de 
+				// notre objet ennemi. 
+				// pas evident de comprendre pourquoi on a besoin à la fois du getglobalbounds et du contains
+				// intuitivement, je n'aurai utilisé que contain.
+
 				if (this->enemies[i].getGlobalBounds().contains(this->mousePosView))
 				{
 					//Gain points
@@ -235,6 +262,9 @@ void Game::updateEnemies()
 					std::cout << "Points: " << this->points << "\n";
 
 					//Delete the enemy
+
+					// le fait de passer deleted à true fait qu'on sort de la boucle et qu'on ne pourra
+					// pas deleter plusieurs objets en maintenant appuyer le bouton gauche
 					deleted = true;
 					this->enemies.erase(this->enemies.begin() + i);
 				}
@@ -265,6 +295,12 @@ void Game::update()
 		this->endGame = true;
 }
 
+// je crois que l'utilisation de RenderTarget sert si on utilisait plusieurs fenètre (c'est la class mère de renderwindows)
+// j'imagine et ce sont les points merdiques du C++ qu'on met le & pour indiquer qu'on veut une reference sur la fenètre
+// afin de ne pas la copier? La fenètre envoyé sera simplement this->windows ou plus exactement *this->windows: cette écriture
+// est mysterieuse pour moi car la fleche sert déja à dereferencer et l'étoile aussi. donc il y a redondance et je ne pige pas.
+// a moins que écrit comme cela, on indique qu'on passe un pointeur en argument . Tout cela sera testé en debuggage.
+
 void Game::renderText(sf::RenderTarget& target)
 {
 	target.draw(this->uiText);
@@ -273,8 +309,16 @@ void Game::renderText(sf::RenderTarget& target)
 void Game::renderEnemies(sf::RenderTarget& target)
 {
 	//Rendering all the enemies
+	// ici encore je crois que l'utilsiation d'une réference sur e evite la copie de l'objet mais c'est pas clair et
+	// je ne suis pas sûr.
+
+	// auto signifie : detection automatique de type.
+	// les : correspondent à une boucle de type range, comme dans matlab, trés pratique.
 	for (auto &e : this->enemies)
 	{
+		// écriture trés peu user friendly; target est la fenètre cible
+		// e correspond à l'ennemi mais pourquoi e et pas &e; c'est la caractéristique du C++ d'être peu lisible et peu clair.
+		// que fait le &e dans la boucle, declare il une réference sur e qu'on peut ensuite appeler e? vraiment merdique.
 		target.draw(e);
 	}
 }
@@ -294,6 +338,8 @@ void Game::render()
 	this->window->clear();
 
 	//Draw game objects
+
+	// l'utilisation du * est pas clair du tout.
 	this->renderEnemies(*this->window);
 	
 	this->renderText(*this->window);
