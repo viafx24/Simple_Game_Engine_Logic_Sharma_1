@@ -3,13 +3,15 @@
 //Private functions
 void Game::initVariables()
 {
+	// puisque 'on utilise new, this->windows est un pointeur qu'on initialise à zero avec nullptr ce qui est une meilleur pratique
+	// que d'utiliser NULL car NULL est un int fixé à zero alors que nullptr est forcement un pointeur initilialisé à zero.
 	this->window = nullptr;
 	
 	//Game logic
 	this->endGame = false;
 	this->points = 0;
 	this->health = 20;
-	this->enemySpawnTimerMax = 20.f;
+	this->enemySpawnTimerMax = 20.f;// 20 pour un int; 20.0 si on veut un double, 20.f si on veut un float. C++ (pas SFML)
 	this->enemySpawnTimer = this->enemySpawnTimerMax;
 	this->maxEnemies = 5;
 	this->mouseHeld = false;
@@ -20,6 +22,12 @@ void Game::initWindow()
 	this->videoMode.height = 600;
 	this->videoMode.width = 800;
 	
+	// l'utilisation du new/delete est en général à proscrire. Je ne sais pas pourquoi ici, le choix a été fait de travailler
+	// avec un pointeur pour windows plutôt que l'objet directement. peut-être pour anticiper le fait que certaine méthode passeront
+	// la fenètre en argument et pour eviter de copier? pas clair encore pour moi. J'aurais voulu faire un test sans new/delete
+	// mais cela necessite de changer tous les -> par des . aprés window. un peu lourd. on verra plus tard. Ce qui compte c'est que
+	// ca marche et que je comprends les deux écritures même si je sais pas pourquoi l'utilisation du new ici a été preferé.
+
 	this->window = new sf::RenderWindow(this->videoMode, "Game 1", sf::Style::Titlebar | sf::Style::Close);
 
 	this->window->setFramerateLimit(60);
@@ -62,6 +70,8 @@ Game::Game()
 
 Game::~Game()
 {
+
+	// ce code sera executé même si le destructeur est viruel car il n'est "pure virtuel" (cas d'une classe abstraite)
 	delete this->window;
 }
 
@@ -217,6 +227,9 @@ void Game::updateEnemies()
 			// tout jusquà s'arrêter sur notre element. pourquoi est ce necessaire à bas niveau?
 			// pas encor clair. 
 
+			// le point étrange c'est qu'il n'y a pas d'initilisation de l'iterateur ni utilisation
+			// du mot clés auto pour  générer une initialisation automatique.
+
 			this->enemies.erase(this->enemies.begin() + i);
 			// on perd un point de vie.
 			this->health -= 1;
@@ -314,7 +327,16 @@ void Game::renderEnemies(sf::RenderTarget& target)
 
 	// auto signifie : detection automatique de type.
 	// les : correspondent à une boucle de type range, comme dans matlab, trés pratique.
+
+	// je ne comprends toujours pas cette écriture (voir note)
+	// celle la (sans le eperluette) fonctionne tout aussi bien:  for (auto e : this->enemies)
+
+	// ici le range ne fonctionne pas exactement comme dans matlab: la deuxième partie (this->ennemies) n'a pas besoin
+	// d'être la fin (une sorte de limite, de end comme dans matlab) mais simplement le vecteur, la map etc.. a parcourir.
+
 	for (auto &e : this->enemies)
+
+
 	{
 		// écriture trés peu user friendly; target est la fenètre cible
 		// e correspond à l'ennemi mais pourquoi e et pas &e; c'est la caractéristique du C++ d'être peu lisible et peu clair.
@@ -339,7 +361,10 @@ void Game::render()
 
 	//Draw game objects
 
-	// l'utilisation du * est pas clair du tout.
+	// l'utilisation du * est pas clair du tout. 
+	// si il s'agit simplement du dereferencement du pointeur this->windows car renderennmies attend l'objet en argument et non pas l
+// le pointeur.
+
 	this->renderEnemies(*this->window);
 	
 	this->renderText(*this->window);

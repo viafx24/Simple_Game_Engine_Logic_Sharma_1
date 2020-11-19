@@ -80,7 +80,12 @@ public:
 
 	//Accessors
 	
+	
+	
 	// renvoie 1 si la fenètre est ouverte; const permet de dire qu'on interdit à la méthode de changer quoi que ce soit (variables privé)
+	// deux const ici, peut-être qu'il y en a un d'inutile (le premier) mais pas sûr. il s'agit d'accesseur, le const à la fin dit que rien
+	// dans l'objet manipulé ne sera modifié. le const avant concerne le bool retourné: on sait aussi que ce dernier n'aura pas été modifié.
+	
 	const bool running() const;
 	const bool getEndGame() const;
 
